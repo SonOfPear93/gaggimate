@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "knob-screen")(type "KiCad")(uri "${KIPRJMOD}/knob-screen.pretty")(options "")(descr "Board C local footprints"))
+)
