@@ -1,0 +1,12 @@
+# Python 3.12 (build123d/OCP wheels are not available for every newer Python yet)
+#   uv venv -p 3.12 .venv && uv pip install -p .venv/bin/python -r requirements.txt
+build123d==0.13.0
+trimesh==5.2.0
+manifold3d==3.5.4
+numpy==2.5.4
+shapely==2.2.0
+networkx==3.7
+rtree==1.4.1
+scipy==1.18.1
+matplotlib==3.11.2
+pyvista==0.49.2
