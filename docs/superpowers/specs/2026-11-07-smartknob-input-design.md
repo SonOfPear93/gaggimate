@@ -191,7 +191,12 @@ must update this table and the firmware `AmoledHwConfig`/knob pin header togethe
   HX_DOUT, GND).
 
 ### Board B — main ("knob-main")
-- Ø74 mm round, 1.6 mm, 4× M2 mounting holes at r = 33 mm on 45°/135°/225°/315°.
+- Ø74 mm round, 1.6 mm, 4× M2 mounting holes at r = 33 mm on 22.5°/112.5°/202.5°/292.5°
+  (rotated from 45°-multiples so no hole sits under board A's wire slot at 225°). Board B
+  is screwed to bosses in the back case; nothing bridges between A and B except cables.
+  The 13 screen-wire pads and 3 motor pads sit under board A's slot (around r ≈ 30 mm,
+  225°) so the bundle drops straight onto them. Board A's back side has parts up to
+  2.9 mm tall (J1), so B's top-side parts must leave ≥ 4 mm clear under A.
   Max component height 6 mm on top (facing board A), 3 mm on the bottom except
   connectors; board A–B spacing is set by the mechanical design (target 8 mm).
 - ESP32-S3-WROOM-1-N16R8 with the antenna overhanging/at the board edge with the
