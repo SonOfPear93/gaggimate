@@ -1,7 +1,9 @@
 #include "SdlDriver.h"
+#include "SimKnob.h"
 
 #include <SDL.h>
 #include <cstdlib>
+#include <cstring>
 #include <display/main.h>
 #include <lvgl.h>
 #include <vector>
@@ -22,6 +24,9 @@ static constexpr Uint8 BEZEL_R = 0x28, BEZEL_G = 0x28, BEZEL_B = 0x28;
 
 static lv_disp_draw_buf_t s_draw_buf;
 static lv_color_t *s_buf = nullptr;
+// CPU-side copy of the panel, so screenshots work with any SDL video driver
+// (including SDL_VIDEODRIVER=offscreen, where reading back the renderer fails).
+static std::vector<uint16_t> s_shadow(DISP_W * DISP_H, 0);
 
 static int s_mouseX = 0;
 static int s_mouseY = 0;
@@ -31,6 +36,8 @@ static bool s_quit = false;
 static void disp_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_p) {
     SDL_Rect r{area->x1, area->y1, area->x2 - area->x1 + 1, area->y2 - area->y1 + 1};
     SDL_UpdateTexture(s_texture, &r, color_p, r.w * (int)sizeof(lv_color_t));
+    for (int y = 0; y < r.h; y++)
+        memcpy(&s_shadow[(r.y + y) * DISP_W + r.x], color_p + y * r.w, r.w * sizeof(uint16_t));
     lv_disp_flush_ready(drv);
 }
 
@@ -114,11 +121,23 @@ void SdlDriver::pumpAndRender() {
         case SDL_KEYUP: // keys 1/2 act as the brew/steam inputs of the controller board
             if (e.key.repeat == 0 && (e.key.keysym.sym == SDLK_1 || e.key.keysym.sym == SDLK_2))
                 controller.getClientController()->simulateButton(e.key.keysym.sym == SDLK_1 ? 0 : 1, e.type == SDL_KEYDOWN);
+            // GaggiMate Knob emulation: arrows turn (key repeat = keep turning), Enter presses.
+            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RIGHT)
+                SimKnob::instance().turn(1);
+            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_LEFT)
+                SimKnob::instance().turn(-1);
+            if (e.key.repeat == 0 && (e.key.keysym.sym == SDLK_RETURN || e.key.keysym.sym == SDLK_KP_ENTER))
+                SimKnob::instance().setPressed(e.type == SDL_KEYDOWN, SDL_GetTicks());
+            break;
+        case SDL_MOUSEWHEEL: // knob emulation: one wheel notch = one detent
+            if (e.wheel.y != 0)
+                SimKnob::instance().turn(e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -e.wheel.y : e.wheel.y);
             break;
         default:
             break;
         }
     }
+    SimKnob::instance().tick(SDL_GetTicks());
     SDL_SetRenderDrawColor(s_renderer, BEZEL_R, BEZEL_G, BEZEL_B, 0xFF);
     SDL_RenderClear(s_renderer);
     SDL_RenderCopy(s_renderer, s_texture, nullptr, nullptr);
@@ -129,15 +148,19 @@ void SdlDriver::pumpAndRender() {
 bool SdlDriver::shouldQuit() const { return s_quit; }
 
 void SdlDriver::screenshot(const char *path) {
-    SDL_SetRenderDrawColor(s_renderer, BEZEL_R, BEZEL_G, BEZEL_B, 0xFF);
-    SDL_RenderClear(s_renderer);
-    SDL_RenderCopy(s_renderer, s_texture, nullptr, nullptr);
-    SDL_RenderCopy(s_renderer, s_mask, nullptr, nullptr); // round off the corners
+    // Built from the shadow framebuffer (not SDL_RenderReadPixels) so it also works headless.
     SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(0, DISP_W, DISP_H, 16, SDL_PIXELFORMAT_RGB565);
-    if (surface) {
-        SDL_RenderReadPixels(s_renderer, nullptr, SDL_PIXELFORMAT_RGB565, surface->pixels, surface->pitch);
-        SDL_SaveBMP(surface, path);
-        SDL_FreeSurface(surface);
+    if (!surface)
+        return;
+    const double cx = DISP_W / 2.0, cy = DISP_H / 2.0, r = DISP_W / 2.0;
+    const uint16_t bezel = ((BEZEL_R >> 3) << 11) | ((BEZEL_G >> 2) << 5) | (BEZEL_B >> 3);
+    for (int y = 0; y < DISP_H; y++) {
+        auto *row = reinterpret_cast<uint16_t *>(static_cast<uint8_t *>(surface->pixels) + y * surface->pitch);
+        for (int x = 0; x < DISP_W; x++) {
+            const double dx = x + 0.5 - cx, dy = y + 0.5 - cy;
+            row[x] = (dx * dx + dy * dy <= r * r) ? s_shadow[y * DISP_W + x] : bezel; // round off the corners
+        }
     }
-    SDL_RenderPresent(s_renderer);
+    SDL_SaveBMP(surface, path);
+    SDL_FreeSurface(surface);
 }

@@ -77,6 +77,15 @@ class DefaultUI {
 
     void applyTheme();
 
+    // Read-only UI state for alternative input devices (the knob navigator, GaggiMate Knob).
+    BrewScreenState getBrewScreenState() const { return brewScreenState; }
+    bool isBrewConfirmVisible() const { return brewConfirmVisible; }
+    int getProfileIndex() const { return currentProfileIdx; }
+    int getProfileCount() {
+        std::lock_guard<std::mutex> guard(profilesMutex);
+        return static_cast<int>(favoritedProfileIds.size());
+    }
+
     bool isTaskHealthy() const {
         return is_task_healthy(eTaskGetState(taskHandle)) && is_task_healthy(eTaskGetState(profileTaskHandle));
     }

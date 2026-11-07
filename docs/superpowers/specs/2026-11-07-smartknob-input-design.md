@@ -182,7 +182,11 @@ must update this table and the firmware `AmoledHwConfig`/knob pin header togethe
 - Mounting: 4× M2 holes at r = 29.8 mm on 0°/90°/180°/270° and 2× Ø2.2 alignment holes
   at r = 35 mm on 0°/180°, exactly as SmartKnob's view_base (H4–H9), so the board
   clamps to the front case at the same points SmartKnob's back plate does.
-- A hole/slot so the 13 screen wires and 3 motor wires can pass through to board B.
+- Wire pass-through slot for the 13 screen wires and 3 motor wires: 3.0 × 7.0 mm
+  (long axis tangential), centred at r = 33.5 mm, 225° (measured counter-clockwise from
+  +X, with the alignment holes on the X axis), on the rigid ring, clear of the flexure.
+  The wires leave the MountBase, run across the top of board A under the front case to
+  this slot, then drop to board B. The mechanical design provides the channel.
 - Connector to board B: JST-SH 8-pin (3V3, GND, ENC_CS, ENC_CLK, ENC_DO, HX_SCK,
   HX_DOUT, GND).
 

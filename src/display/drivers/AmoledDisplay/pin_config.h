@@ -108,6 +108,37 @@ constexpr AmoledHwConfig WAVESHARE_S3_TOUCH_AMOLED_1_43_HW_CONFIG{
     .mirror_touch = false,
 };
 
+// GaggiMate Knob main board (ESP32-S3-WROOM-1-N16R8) with the Waveshare 1.75" CO5300 +
+// CST9217 panel; GPIOs from the knob design doc §5 (mirrored in display/knob/KnobPins.h).
+// Panel offsets / touch mirroring copied from WAVESHARE_S3_AMOLED_HW_CONFIG (same panel).
+// No RTC, no SD card, no battery ADC. Touch is optional on this board.
+constexpr AmoledHwConfig GAGGIMATE_KNOB_AMOLED_175_HW_CONFIG{
+    .lcd_sdio0 = 11,
+    .lcd_sdio1 = 13,
+    .lcd_sdio2 = 14,
+    .lcd_sdio3 = 15,
+    .lcd_sclk = 12,
+    .lcd_cs = 10,
+    .lcd_rst = 16,
+    .lcd_width = 466,
+    .lcd_height = 466,
+    .lcd_gram_offset_x = 6,
+    .lcd_gram_offset_y = 0,
+    .lcd_en = 17,
+    .i2c_sda = 7,
+    .i2c_scl = 6,
+    .tp_int = 9,
+    .tp_rst = 8,
+    .battery_voltage_adc_data = -1,
+    .sd_cs = -1,
+    .sd_mosi = -1,
+    .sd_miso = -1,
+    .sd_sclk = -1,
+    .pcf8563_int = -1,
+    .rotation_175 = 0,
+    .mirror_touch = true,
+};
+
 #define CST92XX_DEVICE_ADDRESS 0x5A
 #define FT3168_DEVICE_ADDRESS 0x38
 #define PCF8563_DEVICE_ADDRESS 0x51

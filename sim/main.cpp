@@ -4,9 +4,12 @@
 // are no-ops in the simulator.
 #include "ESPAsyncWebServer.h"
 #include "SdlDriver.h"
+#include "SimKnob.h"
 #include <Arduino.h>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <display/core/Controller.h>
 #include <display/plugins/ShotHistoryPlugin.h>
 #include <display/ui/default/DefaultUI.h>
@@ -18,11 +21,25 @@ int main(int argc, char **argv) {
     // Optional: `--screenshot <path> [delayMs]` renders for a bit, saves a BMP, exits.
     const char *shotPath = nullptr;
     unsigned long shotDelayMs = 4000;
+    // GaggiMate Knob emulation: `--knob` turns it on at start (otherwise the first
+    // wheel/arrow/Enter does); `--knob-script <keys>` replays knob input once the UI
+    // is up, one key every 300 ms: r/l = turn +1/-1, p = press, P = long press,
+    // . = wait, s = save a screenshot to <prefix>-<n>.bmp (`--knob-shots <prefix>`).
+    bool knobOn = false;
+    std::string knobScript;
+    std::string knobShots = "knob";
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--screenshot") == 0 && i + 1 < argc) {
             shotPath = argv[++i];
-            if (i + 1 < argc)
-                shotDelayMs = strtoul(argv[i + 1], nullptr, 10);
+            if (i + 1 < argc && argv[i + 1][0] != '-')
+                shotDelayMs = strtoul(argv[++i], nullptr, 10);
+        } else if (strcmp(argv[i], "--knob") == 0) {
+            knobOn = true;
+        } else if (strcmp(argv[i], "--knob-script") == 0 && i + 1 < argc) {
+            knobOn = true;
+            knobScript = argv[++i];
+        } else if (strcmp(argv[i], "--knob-shots") == 0 && i + 1 < argc) {
+            knobShots = argv[++i];
         }
     }
 
@@ -42,6 +59,11 @@ int main(int argc, char **argv) {
     DefaultUI *ui = controller.getUI();
     const unsigned long start = millis();
     bool shotTaken = false;
+    if (knobOn)
+        SimKnob::instance().activate();
+    size_t knobScriptPos = 0;
+    unsigned long knobNextKey = start + 4000; // let the mock controller connect first
+    int knobShotCount = 0;
 
     while (!drv->shouldQuit()) {
         controller.loop();      // connection lifecycle, comms pump, plugins
@@ -75,6 +97,34 @@ int main(int argc, char **argv) {
         }
 
         drv->pumpAndRender();
+
+        if (knobScriptPos < knobScript.size() && millis() >= knobNextKey) {
+            knobNextKey = millis() + 300;
+            switch (knobScript[knobScriptPos++]) {
+            case 'r':
+                SimKnob::instance().turn(1);
+                break;
+            case 'l':
+                SimKnob::instance().turn(-1);
+                break;
+            case 'p':
+                SimKnob::instance().injectPress(knob::PressType::Short);
+                break;
+            case 'P':
+                SimKnob::instance().injectPress(knob::PressType::Long);
+                break;
+            case 's': {
+                const std::string path = knobShots + "-" + std::to_string(++knobShotCount) + ".bmp";
+                drv->screenshot(path.c_str());
+                printf("[sim-knob] screenshot %s\n", path.c_str());
+                break;
+            }
+            default:
+                break;
+            }
+            if (knobScriptPos == knobScript.size() && !shotPath)
+                break; // script finished: exit (handy for headless capture)
+        }
 
         if (shotPath && !shotTaken && millis() - start >= shotDelayMs) {
             drv->screenshot(shotPath);

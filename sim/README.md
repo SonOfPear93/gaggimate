@@ -42,11 +42,16 @@ IDE (CLion/VSCode) it shows up under the `display-sim` environment as the
 - **Interact** with the mouse (it acts as the touchscreen). Keys `1` and `2` press
   and release the brew and steam inputs of the controller board (hold both for
   the combined third button, hold one for a long press).
+- **GaggiMate Knob emulation**: mouse wheel / **←** **→** turn the knob one detent,
+  **Enter** presses it (hold ≥ 0.6 s for a long press). It feeds the same `KnobNavigator`
+  as the knob hardware and switches on with the first knob key (or `--knob`). Scripted:
+  `--knob-script "r.lps" --knob-shots /tmp/knob` (r/l turn, p/P press/long press,
+  `.` wait, `s` screenshot). See `docs/knob-firmware.md`.
 - **WebUI**: open <http://localhost:8080/> while it runs (port 80 is remapped to
   8080 so it needs no root). Live status streams over the WebSocket just like on
   the device.
 - **Screenshot mode** (renders briefly, writes a BMP, exits — handy for
-  validation/CI):
+  validation/CI; add `SDL_VIDEODRIVER=offscreen` to run without a window):
 
   ```shell
   ./.pio/build/display-sim/program --screenshot shot.bmp 4000   # 4000 = delay ms

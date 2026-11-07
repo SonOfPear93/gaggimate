@@ -34,7 +34,15 @@ Amoled_DisplayPanel::~Amoled_DisplayPanel() {
 bool Amoled_DisplayPanel::begin(Amoled_Display_Panel_Color_Order order) {
     bool success = true;
 
+#ifdef GAGGIMATE_KNOB
+    // The knob is the input device; the panel's touch layer is optional on this board.
+    if (!initTouch()) {
+        ESP_LOGW("Amoled_DisplayPanel", "No touch controller, continuing without touch");
+        panelType = DISPLAY_1_75_INCHES;
+    }
+#else
     success &= initTouch();
+#endif
     success &= initDisplay(order);
 
     return success;

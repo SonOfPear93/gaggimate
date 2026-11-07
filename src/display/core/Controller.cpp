@@ -34,6 +34,9 @@
 #include <display/plugins/mDNSPlugin.h>
 #endif
 #include <display/util/PsramAllocator.h>
+#ifdef GAGGIMATE_KNOB
+#include <display/knob/KnobPlugin.h>
+#endif
 #ifndef GAGGIMATE_HEADLESS
 #ifdef GAGGIMATE_SIM
 #include <SdlDriver.h> // desktop SDL panel stands in for the hardware drivers
@@ -120,6 +123,9 @@ void Controller::setup() {
     pluginManager->registerPlugin(new LedControlPlugin());
     pluginManager->registerPlugin(new AutoWakeupPlugin());
     pluginManager->registerPlugin(new CleaningSchedulePlugin());
+#ifdef GAGGIMATE_KNOB
+    pluginManager->registerPlugin(new KnobPlugin()); // motorised haptic knob (input device)
+#endif
     pluginManager->setup(this);
 
     pluginManager->on("profiles:profile:save", [this](Event const &event) {
@@ -192,6 +198,12 @@ void Controller::seedSDCard() {
 void Controller::setupPanel() {
 #ifdef GAGGIMATE_SIM
     driver = SdlDriver::getInstance(); // desktop SDL panel
+    driver->init();
+#elif defined(GAGGIMATE_KNOB)
+    // The knob board has exactly one panel: select it directly, no probing or NVS cache.
+    AmoledDisplayDriver::getInstance()->selectVariant(AmoledDisplayDriver::VARIANT_GAGGIMATE_KNOB);
+    driver = AmoledDisplayDriver::getInstance();
+    gaugeSetpointsInside = true;
     driver->init();
 #else
     // The panel can't change after flashing, so cache the detection result in NVS

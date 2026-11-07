@@ -5,6 +5,9 @@
 
 class AmoledDisplayDriver : public Driver {
   public:
+    // Index of the GaggiMate Knob board in VARIANTS (NVS-persisted indices: append only).
+    static constexpr int VARIANT_GAGGIMATE_KNOB = 3;
+
     bool isCompatible() override;
     // Detected hw variant index for NVS caching; selectVariant restores it without probing
     int getVariant() const { return variant; }

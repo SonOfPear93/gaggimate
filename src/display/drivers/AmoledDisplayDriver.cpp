@@ -23,13 +23,20 @@ static bool detectI2CDevice(uint8_t address, const char *deviceName = nullptr) {
 
 // Variant indices are persisted in NVS (GM-140) — only append, never reorder
 static constexpr AmoledHwConfig VARIANTS[] = {LILYGO_T_DISPLAY_S3_DS_HW_CONFIG, WAVESHARE_S3_TOUCH_AMOLED_1_43_HW_CONFIG,
-                                              WAVESHARE_S3_AMOLED_HW_CONFIG};
+                                              WAVESHARE_S3_AMOLED_HW_CONFIG, GAGGIMATE_KNOB_AMOLED_175_HW_CONFIG};
 static constexpr const char *VARIANT_NAMES[] = {"LilyGo T-Display", "Waveshare 1.43\" AMOLED Display",
-                                                "Waveshare AMOLED Display"};
+                                                "Waveshare AMOLED Display", "GaggiMate Knob 1.75\" AMOLED"};
 static constexpr int VARIANT_COUNT = sizeof(VARIANTS) / sizeof(VARIANTS[0]);
+static_assert(VARIANTS[AmoledDisplayDriver::VARIANT_GAGGIMATE_KNOB].lcd_en == GAGGIMATE_KNOB_AMOLED_175_HW_CONFIG.lcd_en &&
+                  VARIANTS[AmoledDisplayDriver::VARIANT_GAGGIMATE_KNOB].lcd_rst == GAGGIMATE_KNOB_AMOLED_175_HW_CONFIG.lcd_rst,
+              "VARIANT_GAGGIMATE_KNOB must index the knob config");
 
 bool AmoledDisplayDriver::isCompatible() {
     for (int i = 0; i < VARIANT_COUNT; i++) {
+        // The knob board is selected explicitly by the display-knob build, never probed
+        // (its I2C pins match the LilyGo T-Display's).
+        if (i == VARIANT_GAGGIMATE_KNOB)
+            continue;
         ESP_LOGI("AmoledDisplayDriver", "Testing %s...", VARIANT_NAMES[i]);
         if (testHw(VARIANTS[i])) {
             hwConfig = VARIANTS[i];
@@ -63,7 +70,7 @@ void AmoledDisplayDriver::init() {
     beginLvglHelper(*panel);
 }
 
-bool AmoledDisplayDriver::supportsSDCard() { return true; }
+bool AmoledDisplayDriver::supportsSDCard() { return hwConfig.sd_cs >= 0; } // the knob board has no SD slot
 
 bool AmoledDisplayDriver::installSDCard() { return panel->installSD(); }
 

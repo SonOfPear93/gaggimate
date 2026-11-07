@@ -23,6 +23,11 @@
 #include <display/ui/default/eez/images.h>
 #include <display/ui/default/eez/ui.h>
 
+#include <display/knob/KnobBuild.h>
+#ifdef GAGGIMATE_KNOB_UI
+#include <display/knob/KnobUi.h>
+#endif
+
 static EffectManager effect_mgr;
 
 static constexpr uint32_t STARTUP_FADE_MS = 1000; // standby fade-in duration on power-up
@@ -409,6 +414,11 @@ void DefaultUI::loop() {
     }
 
     ui_tick();
+#ifdef GAGGIMATE_KNOB_UI
+    // Knob input runs on this (LVGL) task so its actions and focus highlight never race the
+    // UI; after ui_tick() so it sees this frame's widget visibility.
+    knob::KnobUi::instance().loop(this, controller);
+#endif
     lv_task_handler();
 }
 
