@@ -43,7 +43,7 @@ B_BOT = B_TOP - B_T         # -10.8
 B_HOLE_R, B_HOLE_ANG = 33.0, (22.5, 112.5, 202.5, 292.5)   # coordinator update 2026-11-07
 B_BOTTOM_COMP = 3.0         # doc: max 3 mm on the bottom except connectors
 # connector positions taken from knob-main.kicad_pcb (work in progress, re-check!)
-B_USB = dict(x=-28.6, y=12.0, axis_deg=180.0, h=3.26)     # HRO TYPE-C-31-M-12 on top side
+B_USB = dict(x=-33.2, y=0.0, axis_deg=180.0, h=3.26)      # HRO TYPE-C-31-M-12 on top side (final knob-main J1, mating face at the Ø74 edge)
 B_XH = dict(x=16.0, y=-10.3, w=20.0, d=8.5)               # J2 B4B-XH-A vertical, bottom side
 
 # ------------------------------------------------------------------ board C (knob-screen)

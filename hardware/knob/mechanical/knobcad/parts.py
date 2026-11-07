@@ -265,7 +265,8 @@ def board_b():
     b = cyl(P.B_R, P.B_BOT, P.B_TOP)
     b = b - union_all([at_polar(cyl(1.1, P.B_BOT - 1, P.B_TOP + 1), P.B_HOLE_R, a) for a in P.B_HOLE_ANG])
     # a few tall parts from knob-main.kicad_pcb (positions may still change)
-    usb = Pos(P.B_USB['x'] + 0.5, P.B_USB['y'], P.B_TOP) * Box(7.35, 8.94, P.B_USB['h'], align=MIN)
+    # B_USB is the footprint origin (body centre); mating face points along axis_deg
+    usb = Pos(P.B_USB['x'], P.B_USB['y'], P.B_TOP) * Box(7.35, 8.94, P.B_USB['h'], align=(Align.CENTER, Align.CENTER, Align.MIN))
     esp = Pos(0, 22.75, P.B_TOP) * Box(18.0, 25.5, 3.1, align=MIN)
     xh = Pos(P.B_XH['x'] - 3.75, P.B_XH['y'], P.B_BOT - 7.0) * Box(12.4, 5.75, 7.0, align=MIN)
     return b + usb + esp + xh
